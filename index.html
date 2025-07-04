@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Quiz Builder</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Custom styles to ensure Inter font is applied globally */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 antialiased">
+
+    <div class="bg-gray-800 shadow-xl rounded-2xl p-8 w-full max-w-3xl border border-gray-200">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-600">
+                AI Quiz Builder
+            </span>
+        </h1>
+
+        <div class="mb-6">
+            <label for="topic-input" class="block text-white text-lg font-semibold mb-2">
+                Enter Quiz Topic:
+            </label>
+            <input id="topic-input" type="text" placeholder="e.g., World War II, Photosynthesis, Python Programming"
+                class="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-400 focus:border-transparent text-lg text-gray-800 transition duration-200 ease-in-out shadow-sm" />
+        </div>
+
+        <button id="generate-quiz-btn"
+            class="w-full py-3 px-6 rounded-xl text-white font-bold text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-600 hover:to-teal-700">
+            <span id="button-text">Generate Quiz</span>
+            <div id="loading-spinner" class="hidden flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                Generating Quiz...
+            </div>
+        </button>
+
+        <div id="error-message"
+            class="hidden mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl text-center shadow-sm">
+            <p class="font-semibold"></p>
+        </div>
+
+        <div id="quiz-questions-container" class="mt-8 pt-6 border-t border-gray-200">
+            <!-- Quiz questions will be dynamically inserted here -->
+        </div>
+        <footer class="mt-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 AI Quiz Builder. Developed By Harshal Jare ♥</p>
+        </footer>
+    </div>
+    
+
+  
+
+    <script>
+        // Get references to HTML elements
+        const topicInput = document.getElementById('topic-input');
+        const generateQuizBtn = document.getElementById('generate-quiz-btn');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessageDiv = document.getElementById('error-message');
+        const errorMessageP = errorMessageDiv.querySelector('p');
+        const quizQuestionsContainer = document.getElementById('quiz-questions-container');
+
+        /**
+         * Displays an error message to the user.
+         * @param {string} message - The error message to display.
+         */
+        function displayError(message) {
+            errorMessageP.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the error message.
+         */
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+            errorMessageP.textContent = '';
+        }
+
+        /**
+         * Toggles the loading state of the button and displays/hides the spinner.
+         * @param {boolean} isLoading - True to show loading, false to hide.
+         */
+        function toggleLoading(isLoading) {
+            if (isLoading) {
+                generateQuizBtn.disabled = true;
+                generateQuizBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                generateQuizBtn.classList.remove('bg-gradient-to-r', 'from-green-500', 'to-teal-600', 'hover:from-green-600', 'hover:to-teal-700');
+                buttonText.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
+            } else {
+                generateQuizBtn.disabled = false;
+                generateQuizBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                generateQuizBtn.classList.add('bg-gradient-to-r', 'from-green-500', 'to-teal-600', 'hover:from-green-600', 'hover:to-teal-700');
+                buttonText.classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Renders the quiz questions onto the page.
+         * @param {Array<Object>} questions - An array of quiz question objects.
+         */
+        function displayQuizQuestions(questions) {
+            quizQuestionsContainer.innerHTML = ''; // Clear previous questions
+            if (questions.length === 0) {
+                return;
+            }
+
+            const quizTitle = document.createElement('h2');
+            quizTitle.classList.add('text-3xl', 'font-bold', 'text-white', 'mb-6', 'text-center');
+            quizTitle.textContent = 'Your Quiz';
+            quizQuestionsContainer.appendChild(quizTitle);
+
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('bg-gray-50', 'p-6', 'rounded-xl', 'shadow-sm', 'mb-6', 'border', 'border-gray-100');
+
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-xl', 'font-semibold', 'text-gray-900', 'mb-4');
+                questionText.textContent = `${index + 1}. ${q.question}`;
+                questionDiv.appendChild(questionText);
+
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-4');
+
+                q.options.forEach((option, optIndex) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.classList.add('p-3', 'rounded-lg', 'border', 'text-gray-800', 'transition', 'duration-200', 'ease-in-out');
+
+                    if (option === q.correctAnswer) {
+                        optionDiv.classList.add('bg-green-100', 'border-green-300', 'font-medium');
+                    } else {
+                        optionDiv.classList.add('bg-white', 'border-gray-200', 'hover:bg-gray-100', 'cursor-pointer');
+                    }
+                    optionDiv.textContent = option;
+                    optionsGrid.appendChild(optionDiv);
+                });
+                questionDiv.appendChild(optionsGrid);
+                quizQuestionsContainer.appendChild(questionDiv);
+            });
+        }
+
+        /**
+         * Main function to generate the quiz using the Gemini API.
+         */
+        async function generateQuiz() {
+            const topic = topicInput.value.trim();
+
+            if (!topic) {
+                displayError('Please enter a topic to generate a quiz.');
+                return;
+            }
+
+            toggleLoading(true); // Show loading spinner
+            hideError();         // Hide any previous errors
+            quizQuestionsContainer.innerHTML = ''; // Clear previous questions
+
+            try {
+                // Prepare the chat history for the Gemini API call
+                let chatHistory = [];
+                const prompt = `Generate 5 multiple-choice quiz questions about "${topic}". Each question should have 4 options and one correct answer. Provide the output as a JSON array of objects, where each object has 'question' (string), 'options' (array of strings), and 'correctAnswer' (string, which must be one of the options).`;
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                // Define the payload for the API request, including the structured response schema
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "question": { "type": "STRING" },
+                                    "options": {
+                                        "type": "ARRAY",
+                                        "items": { "type": "STRING" }
+                                    },
+                                    "correctAnswer": { "type": "STRING" }
+                                },
+                                "propertyOrdering": ["question", "options", "correctAnswer"]
+                            }
+                        }
+                    }
+                };
+
+                // IMPORTANT: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual Gemini API key.
+                // You can get one from Google AI Studio: https://aistudio.google.com/app/apikey
+                const apiKey = "AIzaSyD5kmhbb52LvKPH1SnWxCOfC2NLf_zpnOA"; // Replace with your actual API key
+                // API URL for Gemini 2.0 Flash model
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                // Make the fetch call to the Gemini API
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Check if the response was successful
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                // Parse the JSON response from the AI
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    try {
+                        const parsedQuestions = JSON.parse(jsonString);
+                        // Validate the structure of the parsed questions
+                        if (Array.isArray(parsedQuestions) && parsedQuestions.every(q =>
+                            typeof q.question === 'string' &&
+                            Array.isArray(q.options) && q.options.every(opt => typeof opt === 'string') &&
+                            typeof q.correctAnswer === 'string' &&
+                            q.options.includes(q.correctAnswer) // Ensure correct answer is one of the options
+                        )) {
+                            displayQuizQuestions(parsedQuestions);
+                        } else {
+                            displayError('Failed to parse quiz questions. Unexpected format from AI.');
+                            console.error('Unexpected AI response format:', parsedQuestions);
+                        }
+                    } catch (parseError) {
+                        displayError('Failed to parse AI response. Invalid JSON.');
+                        console.error('JSON parse error:', parseError);
+                    }
+                } else {
+                    displayError('No quiz questions generated. Please try again or refine your topic.');
+                    console.error('Empty or malformed AI response:', result);
+                }
+            } catch (err) {
+                console.error('Error generating quiz:', err);
+                displayError(`Failed to generate quiz: ${err.message}`);
+            } finally {
+                toggleLoading(false); // Hide loading spinner
+            }
+        }
+
+        // Add event listeners
+        generateQuizBtn.addEventListener('click', generateQuiz);
+        topicInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateQuiz();
+            }
+        });
+    </script>
+</body>
+
+ </html>
