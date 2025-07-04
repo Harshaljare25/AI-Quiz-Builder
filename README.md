@@ -20,7 +20,6 @@ This project highlights modern web development practices, such as responsive des
 * **HTML5:** For the basic structure of the web page.
 * **CSS3 (Tailwind CSS):** A utility-first CSS framework for quick and responsive styling.
 * **JavaScript (ES6+):** For all interactive functions, API calls, and DOM manipulation.
-* **Google Gemini API:** The `gemini-2.0-flash` model generates quiz content.
 
 ## How to Run Locally
 
@@ -40,9 +39,9 @@ To set up this project on your local machine, follow these steps:
    * Find the JavaScript section (within the `<script>` tags).
    * Locate the line:
         ```javascript
-        const apiKey = "YOUR_GEMINI_API_KEY_HERE";
+        const apiKey = "YOUR_API_KEY_HERE";
         ```
-   * Replace `"YOUR_GEMINI_API_KEY_HERE"` with the actual API key you received from Google AI Studio. Make sure to keep the quotes around your key.
+   * Replace `"YOUR_API_KEY_HERE"` with the actual API key you received from Google AI Studio. Make sure to keep the quotes around your key.
 
 4. **Open in Browser:**
    * **Method A (Recommended for VS Code users):**
